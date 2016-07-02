@@ -2,17 +2,18 @@
 var net = require('net');
 var CONFIG = require('./config');
 var fs = require('fs');
-var path;
+var filename;
 var now = new Date();
-var responseSuccess = 'HTTP/1.1 200 OK\n' +
-                'Date: ' + now.toUTCString() +
-                '\nServer: awesomeServer/1.0.0 (Ubuntu)\n';
-var indexData;
-indexData = fs.readFileSync("./public/index.html").toString();
-// console.log("indexData: " + indexData);
+var responseSuccess = 'HTTP/1.1 200 OK';
+var notFound = 'HTTP/1.1 404 Not Found';
+
 var serverHTTPHeaders;
 
 var server = net.createServer(function (socket) {
+  var messageBody;
+  //messageBody = fs.readFileSync("./public/index.html").toString();
+  // console.log("messageBody: " + messageBody);
+
   var socketAddress = socket.address().address;
   var socketPort = socket.remotePort;
   var clientFirstLine = [];
@@ -22,19 +23,28 @@ var server = net.createServer(function (socket) {
 
   socket.on('data', function(data) {
     clientFirstLine = data.toString().split(' ').splice(0, 3);
-    //console.log(clientFirstLine);
     if(clientFirstLine[0] === 'GET') {
       console.log("Get detected.");
-
       if(clientFirstLine[1][0] === '/') {
         console.log("/ detected.");
+        if (clientFirstLine[1].length === 1) {
+          filename = "index.html";
+          messageBody = fs.readFileSync('./public/' + filename).toString();
+        }
+        else {
+          filename = clientFirstLine[1].slice(1).toString();
+          console.log("filename: " + filename);
+          if(fs.readFileSync('./public/' + filename)) {
+            messageBody = fs.readFileSync('./public/' + filename).toString();
+          }
+        }
         // assume index.html always exists
-        if(clientFirstLine[2]) {
+        if(clientFirstLine[2] === 'HTTP/1.1') {
           console.log(clientFirstLine[2] + " detected.");
-          statusLine = 'HTTP/1.1 200 OK';
+          statusLine = responseSuccess;
           socket.write(statusLine);
           socket.write(serverHTTPHeaders);
-          socket.write("\n" + indexData);
+          socket.write("\n" + messageBody);
         }
       }
     }
