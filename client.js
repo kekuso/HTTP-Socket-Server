@@ -17,10 +17,10 @@ if(url) {
     var serverPort = socket.remotePort;
     var now = new Date();
     console.log('CONNECTED TO: ' + serverAddress + ":" + serverPort);
-    socket.write('GET /apply HTTP/1.1\n' +
+    socket.write('GET / HTTP/1.1 \n' +
       'Date: ' + now.toUTCString() + '\n' +
-      'Host: www.devleague.com\n' +
-      'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36\n\n');
+      'Host: localhost\n' +
+      'User-Agent: AGENT OF JUSTICE\n\n');
   });
 
   socket.on('data', function(data) {

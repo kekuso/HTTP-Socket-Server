@@ -3,18 +3,31 @@ var net = require('net');
 var CONFIG = require('./config');
 var path;
 var now = new Date();
-var response = 'HTTP/1.1 200 OK\n' +
+var responseSuccess = 'HTTP/1.1 200 OK\n' +
                 'Date: ' + now.toUTCString() +
                 '\nServer: awesomeServer/1.0.0 (Ubuntu)\n';
 
 var server = net.createServer(function (socket) {
   var socketAddress = socket.address().address;
   var socketPort = socket.remotePort;
+  var firstLine = [];
+  var httpHeaders = [];
   console.log("CONNECTED: " + socketAddress + ":" + socketPort);
 
   socket.on('data', function(data) {
-    var index = clients.indexOf(socket);
-    console.log(('SERVER BCAST FROM ' + socketAddress + ":" + socket.remotePort + " " + userArray[index] + ": " + data).replace(/(\r\n|\n|\r)/gm,""));
+    firstLine = data.toString().split(' ');
+    if(firstLine[0] === 'GET') {
+      console.log("Get detected.");
+
+      if(firstLine[1][0] === '/') {
+      console.log("/ detected.");
+      }
+      if(firstLine[2]) {
+        console.log(firstLine[2] + " detected.");
+      }
+    }
+
+    console.log(('SERVER BCAST FROM ' + socketAddress + ":" + socket.remotePort + ": " + data).replace(/(\r\n|\n|\r)/gm,""));
   });
 });
 
