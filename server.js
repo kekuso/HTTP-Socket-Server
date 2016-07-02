@@ -10,9 +10,7 @@ var notFound = 'HTTP/1.1 404 Not Found';
 var serverHTTPHeaders;
 
 var server = net.createServer(function (socket) {
-  var messageBody;
-  //messageBody = fs.readFileSync("./public/index.html").toString();
-  // console.log("messageBody: " + messageBody);
+  var messageBody = "";
 
   var socketAddress = socket.address().address;
   var socketPort = socket.remotePort;
@@ -23,16 +21,16 @@ var server = net.createServer(function (socket) {
   socket.on('data', function(data) {
     clientFirstLine = data.toString().split(' ').splice(0, 3);
     if(clientFirstLine[0] === 'GET') {
-      console.log("Get detected.");
+      //console.log("Get detected.");
       if(clientFirstLine[1][0] === '/') {
-        console.log("/ detected.");
+        //console.log("/ detected.");
         if (clientFirstLine[1].length === 1) {
           filename = "index.html";
           messageBody = fs.readFileSync('./public/' + filename).toString();
         }
         else {
           filename = clientFirstLine[1].slice(1).toString();
-          console.log("filename: " + filename);
+          //console.log("filename: " + filename);
           try {
             messageBody = fs.readFileSync('./public/' + filename).toString();
           }
@@ -45,15 +43,17 @@ var server = net.createServer(function (socket) {
         }
         // assume index.html always exists
         if(clientFirstLine[2] === 'HTTP/1.1') {
-          console.log(clientFirstLine[2] + " detected.");
+          //console.log(clientFirstLine[2] + " detected.");
           socket.write(responseSuccess + serverHTTPHeaders + '\n' + messageBody);
-          // socket.write(serverHTTPHeaders);
-          // socket.write("\n" + messageBody);
         }
       }
     }
+    else {
+      socket.write("Only GET method has been implemented so far.");
+      throw new Error("Only GET method has been implemented so far.");
+    }
     clientHeaderLines = data.toString().split('\n').splice(1);
-    console.log(clientHeaderLines);
+    //console.log(clientHeaderLines);
 
     console.log(('SERVER BCAST FROM ' + socketAddress + ":" + socket.remotePort + ": " + data).replace(/(\r\n|\n|\r)/gm,""));
   });
@@ -63,7 +63,7 @@ server.listen(CONFIG.PORT, function () {
   var PORT = server.address().port;
   var serverNow = new Date();
   console.log('Server listening on 127.0.0.1:' + CONFIG.PORT);
-  serverHTTPHeaders = 'Server: localhost\n' +
+  serverHTTPHeaders = '\nServer: localhost\n' +
                       'Date: ' + serverNow.toUTCString() + '\n';
 });
 
