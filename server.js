@@ -1,12 +1,15 @@
 // server
 var net = require('net');
 var CONFIG = require('./config');
+var fs = require('fs');
 var path;
 var now = new Date();
 var responseSuccess = 'HTTP/1.1 200 OK\n' +
                 'Date: ' + now.toUTCString() +
                 '\nServer: awesomeServer/1.0.0 (Ubuntu)\n';
-
+var indexData;
+indexData = fs.readFileSync("./public/index.html").toString();
+// console.log("indexData: " + indexData);
 var serverHTTPHeaders;
 
 var server = net.createServer(function (socket) {
@@ -31,6 +34,7 @@ var server = net.createServer(function (socket) {
           statusLine = 'HTTP/1.1 200 OK';
           socket.write(statusLine);
           socket.write(serverHTTPHeaders);
+          socket.write("\n" + indexData);
         }
       }
     }
@@ -52,3 +56,5 @@ server.listen(CONFIG.PORT, function () {
 server.on('error', function (err) {
   throw err;
 });
+
+
