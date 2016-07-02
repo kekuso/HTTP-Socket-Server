@@ -18,7 +18,6 @@ var server = net.createServer(function (socket) {
   var socketPort = socket.remotePort;
   var clientFirstLine = [];
   var clientHeaderLines = [];
-  var statusLine;
   console.log("CONNECTED: " + socketAddress + ":" + socketPort);
 
   socket.on('data', function(data) {
@@ -34,17 +33,22 @@ var server = net.createServer(function (socket) {
         else {
           filename = clientFirstLine[1].slice(1).toString();
           console.log("filename: " + filename);
-          if(fs.readFileSync('./public/' + filename)) {
+          try {
             messageBody = fs.readFileSync('./public/' + filename).toString();
+          }
+          catch (err){
+            // socket.write(notFound);
+            // socket.write(serverHTTPHeaders);
+            socket.write(notFound + serverHTTPHeaders + '\n' + messageBody);
+            throw new Error(notFound);
           }
         }
         // assume index.html always exists
         if(clientFirstLine[2] === 'HTTP/1.1') {
           console.log(clientFirstLine[2] + " detected.");
-          statusLine = responseSuccess;
-          socket.write(statusLine);
-          socket.write(serverHTTPHeaders);
-          socket.write("\n" + messageBody);
+          socket.write(responseSuccess + serverHTTPHeaders + '\n' + messageBody);
+          // socket.write(serverHTTPHeaders);
+          // socket.write("\n" + messageBody);
         }
       }
     }
