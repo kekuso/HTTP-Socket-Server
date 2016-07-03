@@ -26,7 +26,12 @@ var server = net.createServer(function (socket) {
         //console.log("/ detected.");
         if (clientFirstLine[1].length === 1) {
           filename = "index.html";
-          messageBody = fs.readFileSync('./public/' + filename).toString();
+          fs.readFile('./public/' + filename, function (err, messageBody) {
+            if (err) {
+              throw err;
+            }
+            socket.write(responseSuccess + serverHTTPHeaders + '\n' + messageBody);
+          });
         }
         else {
           filename = clientFirstLine[1].slice(1).toString();
@@ -48,7 +53,34 @@ var server = net.createServer(function (socket) {
         }
       }
     }
-    else {
+    else if(clientFirstLine[0] === 'HEAD'){
+      if(clientFirstLine[1][0] === '/') {
+        //console.log("/ detected.");
+        if (clientFirstLine[1].length === 1) {
+          filename = "index.html";
+          messageBody = fs.readFileSync('./public/' + filename).toString();
+        }
+        else {
+          filename = clientFirstLine[1].slice(1).toString();
+          //console.log("filename: " + filename);
+          try {
+            messageBody = fs.readFileSync('./public/' + filename).toString();
+          }
+          catch (err){
+            // socket.write(notFound);
+            // socket.write(serverHTTPHeaders);
+            socket.write(notFound + serverHTTPHeaders + '\n' + messageBody);
+            throw new Error(notFound);
+          }
+        }
+        // assume index.html always exists
+        if(clientFirstLine[2] === 'HTTP/1.1') {
+          //console.log(clientFirstLine[2] + " detected.");
+          socket.write(responseSuccess + serverHTTPHeaders);
+        }
+      }
+    }
+    else{
       socket.write("Only GET method has been implemented so far.");
       throw new Error("Only GET method has been implemented so far.");
     }

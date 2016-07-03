@@ -5,6 +5,7 @@ var util = require('util');
 var CONFIG = require('./config');
 
 var port;
+var method = 'GET';
 var url = process.argv[2];
 var urlArray = url.toString().split('/');
 //console.log("URL Array: " + urlArray);
@@ -28,13 +29,13 @@ if(url) {
     var now = new Date();
     console.log('CONNECTED TO: ' + serverAddress + ":" + serverPort);
     if(!path) {
-      socket.write('GET / HTTP/1.1 \n' +
+      socket.write(method + ' / HTTP/1.1 \n' +
       'Date: ' + now.toUTCString() + '\n' +
       'Host: localhost\n' +
       'User-Agent: AGENT OF JUSTICE\n\n');
     }
     else {
-      socket.write('GET /' + path + ' HTTP/1.1 \n' +
+      socket.write(method + ' /' + path + ' HTTP/1.1 \n' +
       'Date: ' + now.toUTCString() + '\n' +
       'Host: localhost\n' +
       'User-Agent: AGENT OF JUSTICE\n\n');
