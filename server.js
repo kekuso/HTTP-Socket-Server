@@ -6,87 +6,76 @@ var filename;
 var now = new Date();
 var responseSuccess = 'HTTP/1.1 200 OK';
 var notFound = 'HTTP/1.1 404 Not Found';
-
 var serverHTTPHeaders;
 
 var server = net.createServer(function (socket) {
   var messageBody = "";
-
+  var finalOutput = " ";
   var socketAddress = socket.address().address;
   var socketPort = socket.remotePort;
   var clientFirstLine = [];
   var clientHeaderLines = [];
   console.log("CONNECTED: " + socketAddress + ":" + socketPort);
+  var method;
 
   socket.on('data', function(data) {
     clientFirstLine = data.toString().split(' ').splice(0, 3);
+    // if(clientFirstLine[2] !== 'HTTP/1.1') {
+    //   throw new Error("Missiing or incorrect HTTP version.");
+    // }
+
     if(clientFirstLine[0] === 'GET') {
-      //console.log("Get detected.");
-      if(clientFirstLine[1][0] === '/') {
-        //console.log("/ detected.");
-        if (clientFirstLine[1].length === 1) {
-          filename = "index.html";
-          fs.readFile('./public/' + filename, function (err, messageBody) {
-            if (err) {
-              throw err;
-            }
-            socket.write(responseSuccess + serverHTTPHeaders + '\n' + messageBody);
-          });
-        }
-        else {
-          filename = clientFirstLine[1].slice(1).toString();
-          //console.log("filename: " + filename);
-          try {
-            messageBody = fs.readFileSync('./public/' + filename).toString();
+      if (clientFirstLine[1] != "/index.html" && clientFirstLine[1] != "/") {
+        filename = clientFirstLine[1];
+        fs.exists('./public' + filename, function(exists) {
+          if(exists) {
+            console.log("filename: " + filename);
+            fs.readFile('./public' + filename, function (err, messageBody) {
+              if(err) throw err;
+              socket.write(responseSuccess + serverHTTPHeaders + '\n' + messageBody);
+            });
           }
-          catch (err){
-            // socket.write(notFound);
-            // socket.write(serverHTTPHeaders);
-            socket.write(notFound + serverHTTPHeaders + '\n' + messageBody);
-            throw new Error(notFound);
+          else {
+            fs.readFile('./public/404.html', function (err, messageBody) {
+              if(err) throw err;
+              socket.write(notFound + serverHTTPHeaders + '\n' + messageBody);
+            });
           }
-        }
-        // assume index.html always exists
-        if(clientFirstLine[2] === 'HTTP/1.1') {
-          //console.log(clientFirstLine[2] + " detected.");
-          socket.write(responseSuccess + serverHTTPHeaders + '\n' + messageBody);
-        }
+        });
+      }
+      else {
+        fs.readFile('./public/index.html', function(err, messageBody) {
+          socket.write(notFound + serverHTTPHeaders + '\n' + messageBody);
+        });
       }
     }
     else if(clientFirstLine[0] === 'HEAD'){
       if(clientFirstLine[1][0] === '/') {
-        //console.log("/ detected.");
         if (clientFirstLine[1].length === 1) {
           filename = "index.html";
           messageBody = fs.readFileSync('./public/' + filename).toString();
         }
         else {
           filename = clientFirstLine[1].slice(1).toString();
-          //console.log("filename: " + filename);
           try {
             messageBody = fs.readFileSync('./public/' + filename).toString();
           }
           catch (err){
-            // socket.write(notFound);
-            // socket.write(serverHTTPHeaders);
             socket.write(notFound + serverHTTPHeaders + '\n' + messageBody);
             throw new Error(notFound);
           }
         }
         // assume index.html always exists
         if(clientFirstLine[2] === 'HTTP/1.1') {
-          //console.log(clientFirstLine[2] + " detected.");
           socket.write(responseSuccess + serverHTTPHeaders);
         }
       }
     }
     else{
-      socket.write("Only GET method has been implemented so far.");
-      throw new Error("Only GET method has been implemented so far.");
+      socket.write("Only GET & HEAD method has been implemented so far.");
+      throw new Error("Only GET & HEAD method has been implemented so far.");
     }
     clientHeaderLines = data.toString().split('\n').splice(1);
-    //console.log(clientHeaderLines);
-
     console.log(('SERVER BCAST FROM ' + socketAddress + ":" + socket.remotePort + ": " + data).replace(/(\r\n|\n|\r)/gm,""));
   });
 });
@@ -102,5 +91,3 @@ server.listen(CONFIG.PORT, function () {
 server.on('error', function (err) {
   throw err;
 });
-
-
